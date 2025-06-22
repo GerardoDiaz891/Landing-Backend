@@ -33,8 +33,13 @@ FLUJO DEL BACKEND:
 
 CONCEPTOS CLAVE:
 ✅ Servidor Express → Atiende peticiones y devuelve respuestas
+
 ✅ Router → Organiza rutas relacionadas
+
 ✅ Controlador → Lógica de qué hacer con cada ruta
+
 ✅ Middleware → Código que se ejecuta antes o después de las rutas (por ejemplo, express.json() transforma el body)
+
 ✅ MySQL2 → Conecta y ejecuta consultas a la base de datos
+
 ✅ dotenv → Maneja variables de entorno
