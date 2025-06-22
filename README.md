@@ -1,15 +1,18 @@
 GUÍA PARA CREAR UN BACKEND EN NODE.JS + EXPRESS + MYSQL
 
 CREACIÓN DEL PROYECTO:
+
 mkdir landing-backend
 cd landing-backend
 npm init -y  # Inicializa el proyecto con un package.json por defecto
 
 DEPENDIENCIAS:
+
 npm install express mysql2 dotenv  # Express para el servidor, mysql2 para conectar con MySQL, dotenv para variables de entorno
 npm install --save-dev nodemon     # Nodemon reinicia el servidor al guardar cambios (solo en desarrollo)
 
 CONCEPTOS
+
 ¿Qué es un middleware?
 Un middleware es una función que intercepta la petición antes de que llegue a la ruta o después de la ruta.
 Ejemplo: express.json() es un middleware que convierte el body de un request en un objeto JavaScript que podemos usar.
