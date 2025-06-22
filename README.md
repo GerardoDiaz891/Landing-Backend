@@ -32,6 +32,7 @@ FLUJO DEL BACKEND:
 5️⃣ La base de datos responde → el controlador forma una respuesta y la envía al cliente
 
 CONCEPTOS CLAVE:
+
 ✅ Servidor Express → Atiende peticiones y devuelve respuestas
 
 ✅ Router → Organiza rutas relacionadas
