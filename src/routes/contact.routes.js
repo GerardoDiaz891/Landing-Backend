@@ -1,11 +1,12 @@
 const express = require('express');
-const router = express.Router();
+const router = express.Router();  // Creamos un router (conjunto de rutas relacionadas)
+
 const contactController = require('../controllers/contact.controller');
 
-//POST
+// POST /api/contacts → Guarda un contacto en la base de datos
 router.post('/', contactController.createContact);
 
-//GET
+// GET /api/contacts → Obtiene todos los contactos guardados
 router.get('/', contactController.getContacts);
 
 module.exports = router;
