@@ -1,6 +1,8 @@
 const {
   createContactService,
   getContactsService,
+  deleteContactService,
+  updateContactService,
 } = require("../services/contact.service.js");
 
 // CREAR CONTACTOS
@@ -24,5 +26,31 @@ exports.getContacts = async (req, res) => {
   } catch (error) {
     console.error("Error al obtener contactos:", error);
     res.status(500).json({ error: "Error en el servidor" });
+  }
+};
+
+// Eliminar contacto
+exports.deleteContact = async (req, res) => {
+  try {
+    const result = await deleteContactService(req.params.id);
+    res.json(result);
+  } catch (error) {
+    console.error("Error al eliminar contacto:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Error interno" });
+  }
+};
+
+// Actualizar contacto
+exports.updateContact = async (req, res) => {
+  try {
+    const result = await updateContactService(req.params.id, req.body);
+    res.json(result);
+  } catch (error) {
+    console.error("Error al actualizar contacto:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Error interno" });
   }
 };

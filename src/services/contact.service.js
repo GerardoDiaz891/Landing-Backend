@@ -118,3 +118,52 @@ exports.getContactsService = () => {
     });
   });
 };
+
+// Eliminar contacto
+exports.deleteContactService = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM contacts WHERE id = ?";
+    db.query(sql, [id], (err, result) => {
+      if (err) return reject(err);
+      if (result.affectedRows === 0) {
+        const error = new Error("Contacto no encontrado");
+        error.status = 404;
+        return reject(error);
+      }
+      resolve({ message: "Contacto eliminado correctamente" });
+    });
+  });
+};
+
+// Editar contacto
+exports.updateContactService = async (id, data) => {
+  const { name, email, phone, message } = data;
+
+  const cleanName = validator.escape(validator.trim(name));
+  const cleanEmail = validator.normalizeEmail(email);
+  const cleanPhone = validator.whitelist(phone, "0-9");
+  const cleanMessage = validator.escape(validator.trim(message));
+
+  const { error } = contactSchema
+    .fork(['token'], (schema) => schema.optional()) // Ignora el campo token
+    .validate({ name: cleanName, email: cleanEmail, phone: cleanPhone, message: cleanMessage });
+
+  if (error) {
+    const err = new Error(error.details[0].message);
+    err.status = 400;
+    throw err;
+  }
+
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE contacts SET name = ?, email = ?, phone = ?, message = ? WHERE id = ?";
+    db.query(sql, [cleanName, cleanEmail, cleanPhone, cleanMessage, id], (err, result) => {
+      if (err) return reject(err);
+      if (result.affectedRows === 0) {
+        const error = new Error("Contacto no encontrado");
+        error.status = 404;
+        return reject(error);
+      }
+      resolve({ message: "Contacto actualizado correctamente" });
+    });
+  });
+};
