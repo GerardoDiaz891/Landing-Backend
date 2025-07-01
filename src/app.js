@@ -10,6 +10,9 @@ app.use(express.urlencoded({ extended: true }));
 
 //Rutas
 const contactRoutes = require("./routes/contact.routes");
+const authRoutes = require("./routes/auth.routes");
+
 app.use("/api/contacts", contactRoutes);
+app.use("/api/auth", authRoutes);
 
 module.exports = app;
