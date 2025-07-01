@@ -16,6 +16,7 @@ const contactSchema = joi.object({
   token: joi.string().required(),
 });
 
+// Función para registrar contacto
 exports.createContactService = async ({
   name,
   email,
@@ -64,9 +65,9 @@ exports.createContactService = async ({
   }
 
   // Guardar en base de datos
-  return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO contacts (name, email, phone, message) VALUES (?, ?, ?, ?)";
+  const sql =
+    "INSERT INTO contacts (name, email, phone, message) VALUES (?, ?, ?, ?)";
+  const insertId = await new Promise((resolve, reject) => {
     db.query(
       sql,
       [cleanName, cleanEmail, cleanPhone, cleanMessage],
@@ -76,16 +77,36 @@ exports.createContactService = async ({
             new Error("Error al guardar el contacto en la base de datos")
           );
         }
-        resolve({
-          message: "Contacto guardado correctamente",
-          id: result.insertId,
-        });
+        resolve(result.insertId);
       }
     );
   });
+
+  // Llamamos la función de Slack
+  await sendLeadNotification(insertId);
+
+  return {
+    message: "Contacto guardado correctamente",
+    id: insertId,
+  };
 };
 
-// Obtener contactos
+// Función para enviar notificación a Slack
+const sendLeadNotification = async (leadId) => {
+  const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+
+  const payload = {
+    text: `🎉 *Nuevo Lead Registrado*\n🆔 Lead #${leadId}\n📬 Se ha recibido un nuevo mensaje a través del formulario de contacto.`,
+  };
+
+  try {
+    await axios.post(slackWebhookUrl, payload);
+  } catch (error) {
+    console.error("Error al enviar notificación a Slack:", error.message);
+  }
+};
+
+// Función para obtener todos los contactos
 exports.getContactsService = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM contacts ORDER BY id DESC";
