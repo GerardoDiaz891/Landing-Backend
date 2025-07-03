@@ -14,13 +14,12 @@ exports.registerUserService = async ({
 }) => {
   const cleanName = validator.escape(validator.trim(name));
   const cleanEmail = validator.normalizeEmail(email);
-  const cleanRole = role === "admin" ? "admin" : "user";
+  const cleanRole = role == "admin" ? "admin" : "user";
 
   const { error } = userSchema.validate({
     name: cleanName,
     email: cleanEmail,
     password,
-    role: cleanRole,
   });
 
   if (error) {
@@ -89,7 +88,7 @@ exports.loginUserService = async ({ email, password }) => {
       const token = jwt.sign(
         { id: user.id, role: user.role, name: user.name },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "20m" }
       );
 
       resolve({
