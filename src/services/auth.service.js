@@ -73,19 +73,25 @@ exports.loginUserService = async ({ email, password }) => {
   const sql = "SELECT * FROM users WHERE email = ?";
 
   try {
-    // Ejecutar la consulta con await, devuelve [results, fields]
     const [results] = await db.query(sql, [cleanEmail]);
+
+    console.log("🧪 Email recibido:", email);
+    console.log("🧪 Email normalizado:", cleanEmail);
+    console.log("🧪 Resultados:", results);
 
     if (results.length === 0) throw new Error("Credenciales inválidas");
 
     const user = results[0];
 
-    if (!user.password || typeof user.password !== "string") {
-      throw new Error("Contraseña inválida");
-    }
+    console.log("🧪 Usuario encontrado:", user);
+    console.log("🧪 Password recibida:", password);
+    console.log("🧪 Password en BD:", user.password);
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("🧪 ¿Coinciden las contraseñas?", isMatch);
+
     if (!isMatch) throw new Error("Credenciales inválidas");
+
 
     const token = jwt.sign(
       { id: user.id, role: user.role, name: user.name },

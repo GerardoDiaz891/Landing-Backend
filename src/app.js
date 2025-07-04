@@ -5,7 +5,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:4173",
   "http://localhost:5173",
-  "https://landingfrontend-production.up.railway.app"
+  "https://landingfrontend-production.up.railway.app",
 ];
 
 app.use(cors({
