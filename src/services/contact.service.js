@@ -64,30 +64,22 @@ exports.createContactService = async ({
     throw err;
   }
 
-  // Guardar en base de datos
+  // Guardar en base de datos con async/await y promesas nativas
   const sql =
     "INSERT INTO contacts (name, email, phone, message) VALUES (?, ?, ?, ?)";
-  const insertId = await new Promise((resolve, reject) => {
-    db.query(
-      sql,
-      [cleanName, cleanEmail, cleanPhone, cleanMessage],
-      (err, result) => {
-        if (err) {
-          return reject(
-            new Error("Error al guardar el contacto en la base de datos")
-          );
-        }
-        resolve(result.insertId);
-      }
-    );
-  });
+  const [result] = await db.query(sql, [
+    cleanName,
+    cleanEmail,
+    cleanPhone,
+    cleanMessage,
+  ]);
 
   // Llamamos la función de Slack
-  await sendLeadNotification(insertId);
+  await sendLeadNotification(result.insertId);
 
   return {
     message: "Contacto guardado correctamente",
-    id: insertId,
+    id: result.insertId,
   };
 };
 
@@ -107,32 +99,24 @@ const sendLeadNotification = async (leadId) => {
 };
 
 // Función para obtener todos los contactos
-exports.getContactsService = () => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM contacts ORDER BY id DESC";
-    db.query(sql, (err, results) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(results);
-    });
-  });
+exports.getContactsService = async () => {
+  const sql = "SELECT * FROM contacts ORDER BY id DESC";
+  const [results] = await db.query(sql);
+  return results;
 };
 
 // Eliminar contacto
 exports.deleteContactService = async (id) => {
-  return new Promise((resolve, reject) => {
-    const sql = "DELETE FROM contacts WHERE id = ?";
-    db.query(sql, [id], (err, result) => {
-      if (err) return reject(err);
-      if (result.affectedRows === 0) {
-        const error = new Error("Contacto no encontrado");
-        error.status = 404;
-        return reject(error);
-      }
-      resolve({ message: "Contacto eliminado correctamente" });
-    });
-  });
+  const sql = "DELETE FROM contacts WHERE id = ?";
+  const [result] = await db.query(sql, [id]);
+
+  if (result.affectedRows === 0) {
+    const error = new Error("Contacto no encontrado");
+    error.status = 404;
+    throw error;
+  }
+
+  return { message: "Contacto eliminado correctamente" };
 };
 
 // Editar contacto
@@ -145,8 +129,13 @@ exports.updateContactService = async (id, data) => {
   const cleanMessage = validator.escape(validator.trim(message));
 
   const { error } = contactSchema
-    .fork(['token'], (schema) => schema.optional()) // Ignora el campo token
-    .validate({ name: cleanName, email: cleanEmail, phone: cleanPhone, message: cleanMessage });
+    .fork(["token"], (schema) => schema.optional()) // Ignora el campo token
+    .validate({
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
+      message: cleanMessage,
+    });
 
   if (error) {
     const err = new Error(error.details[0].message);
@@ -154,16 +143,21 @@ exports.updateContactService = async (id, data) => {
     throw err;
   }
 
-  return new Promise((resolve, reject) => {
-    const sql = "UPDATE contacts SET name = ?, email = ?, phone = ?, message = ? WHERE id = ?";
-    db.query(sql, [cleanName, cleanEmail, cleanPhone, cleanMessage, id], (err, result) => {
-      if (err) return reject(err);
-      if (result.affectedRows === 0) {
-        const error = new Error("Contacto no encontrado");
-        error.status = 404;
-        return reject(error);
-      }
-      resolve({ message: "Contacto actualizado correctamente" });
-    });
-  });
+  const sql =
+    "UPDATE contacts SET name = ?, email = ?, phone = ?, message = ? WHERE id = ?";
+  const [result] = await db.query(sql, [
+    cleanName,
+    cleanEmail,
+    cleanPhone,
+    cleanMessage,
+    id,
+  ]);
+
+  if (result.affectedRows === 0) {
+    const error = new Error("Contacto no encontrado");
+    error.status = 404;
+    throw error;
+  }
+
+  return { message: "Contacto actualizado correctamente" };
 };

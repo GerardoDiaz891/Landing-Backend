@@ -14,7 +14,7 @@ exports.registerUserService = async ({
 }) => {
   const cleanName = validator.escape(validator.trim(name));
   const cleanEmail = validator.normalizeEmail(email);
-  const cleanRole = role == "admin" ? "admin" : "user";
+  const cleanRole = role === "admin" ? "admin" : "user";
 
   const { error } = userSchema.validate({
     name: cleanName,
@@ -35,71 +35,74 @@ exports.registerUserService = async ({
 
   const sql =
     "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
-  return new Promise((resolve, reject) => {
-    db.query(
-      sql,
-      [cleanName, cleanEmail, hashedPassword, cleanRole],
-      (err, result) => {
-        if (err) return reject(err);
-        resolve({
-          id: result.insertId,
-          name: cleanName,
-          email: cleanEmail,
-          role: cleanRole,
-        });
-      }
-    );
-  });
+
+  // Usando await para la consulta con promesas
+  const [result] = await db.query(sql, [
+    cleanName,
+    cleanEmail,
+    hashedPassword,
+    cleanRole,
+  ]);
+
+  return {
+    id: result.insertId,
+    name: cleanName,
+    email: cleanEmail,
+    role: cleanRole,
+  };
 };
 
 // Verificar si el correo ya existe
 const verifyUniqueEmail = async (email) => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT id_user FROM users WHERE email = ?";
-    db.query(sql, [email], (err, results) => {
-      if (err) return reject(new Error("Error al verificar el correo"));
+  const sql = "SELECT id_user FROM users WHERE email = ?";
 
-      if (results.length > 0) {
-        const error = new Error("El correo ya está registrado");
-        error.status = 409; // Conflict
-        return reject(error);
-      }
+  const [results] = await db.query(sql, [email]);
 
-      resolve(true); // Correo disponible
-    });
-  });
+  if (results.length > 0) {
+    const error = new Error("El correo ya está registrado");
+    error.status = 409; // Conflict
+    throw error;
+  }
+
+  return true; // Correo disponible
 };
 
 // Inicio de sesión
 exports.loginUserService = async ({ email, password }) => {
   const cleanEmail = validator.normalizeEmail(email);
-
   const sql = "SELECT * FROM users WHERE email = ?";
-  return new Promise((resolve, reject) => {
-    db.query(sql, [cleanEmail], async (err, results) => {
-      if (err) return reject(err);
-      if (results.length === 0)
-        return reject(new Error("Credenciales inválidas"));
 
-      const user = results[0];
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return reject(new Error("Credenciales inválidas"));
+  try {
+    // Ejecutar la consulta con await, devuelve [results, fields]
+    const [results] = await db.query(sql, [cleanEmail]);
 
-      const token = jwt.sign(
-        { id: user.id, role: user.role, name: user.name },
-        process.env.JWT_SECRET,
-        { expiresIn: "20m" }
-      );
+    if (results.length === 0) throw new Error("Credenciales inválidas");
 
-      resolve({
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          role: user.role,
-          email: user.email,
-        },
-      });
-    });
-  });
+    const user = results[0];
+
+    if (!user.password || typeof user.password !== "string") {
+      throw new Error("Contraseña inválida");
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) throw new Error("Credenciales inválidas");
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role, name: user.name },
+      process.env.JWT_SECRET,
+      { expiresIn: "20m" }
+    );
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        email: user.email,
+      },
+    };
+  } catch (error) {
+    throw error;
+  }
 };
