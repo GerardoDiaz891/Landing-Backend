@@ -8,9 +8,10 @@ const allowedOrigins = [
   "https://landingfrontend-production.up.railway.app",
 ];
 
+// Middleware CORS configurado ANTES de cualquier otra ruta o middleware
 app.use(cors({
   origin: function (origin, callback) {
-    // Permite solicitudes sin origen (como Postman o curl)
+    // Permite solicitudes sin origen (Postman, curl)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -18,10 +19,16 @@ app.use(cors({
       return callback(new Error(msg), false);
     }
     return callback(null, true);
-  }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true  // Solo si usas cookies o autenticación con credenciales
 }));
 
-// Middlewares
+// Para asegurarte que responde al preflight OPTIONS
+app.options('*', cors());
+
+// Middlewares para parseo de body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -43,7 +50,5 @@ if (app._router && app._router.stack) {
 } else {
   console.warn("⚠️ No hay rutas registradas aún.");
 }
-
-
 
 module.exports = app;
