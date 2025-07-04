@@ -25,9 +25,6 @@ app.use(cors({
   credentials: true  // Solo si usas cookies o autenticación con credenciales
 }));
 
-// Para asegurarte que responde al preflight OPTIONS
-app.options('*', cors());
-
 // Middlewares para parseo de body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
