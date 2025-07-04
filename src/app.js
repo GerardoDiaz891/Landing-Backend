@@ -9,7 +9,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // Permite solicitudes sin origen (como Postman o curl)
     if (!origin) return callback(null, true);
 
