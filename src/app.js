@@ -21,8 +21,6 @@ app.use(cors({
   }
 }));
 
-app.options("*", cors());
-
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -33,5 +31,19 @@ const authRoutes = require("./routes/auth.routes");
 
 app.use("/api/contacts", contactRoutes);
 app.use("/api/auth", authRoutes);
+
+// Debug de rutas registradas
+if (app._router && app._router.stack) {
+  app._router.stack
+    .filter(r => r.route && r.route.path)
+    .forEach(r => {
+      const methods = Object.keys(r.route.methods).join(', ').toUpperCase();
+      console.log(`📡 Ruta: ${methods} ${r.route.path}`);
+    });
+} else {
+  console.warn("⚠️ No hay rutas registradas aún.");
+}
+
+
 
 module.exports = app;
